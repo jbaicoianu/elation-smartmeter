@@ -81,10 +81,14 @@ elation.component.add('smartmeter.graph', function() {
     this.xAxis = xAxis;
     this.area = area;
 
-    x.domain(d3.extent(arrdata.map(function(d) { return d.time; })));
+    var maxtime = d3.max(arrdata.map(function(d) { return d.time; }));
+    // default scale 7 days ago
+    x.domain([new Date(maxtime - 7 * 24 * 60 * 60 * 1000), maxtime]);
     y.domain([0, d3.max(arrdata.map(function(d) { return d.value; }))]);
-    x2.domain(x.domain());
+    x2.domain(d3.extent(arrdata.map(function(d) { return d.time; })));
     y2.domain(y.domain());
+
+    this.brush.extent(x.domain());
 
     this.focus.append("path")
       .data([arrdata])
@@ -103,7 +107,6 @@ elation.component.add('smartmeter.graph', function() {
       .attr("x", 0)
       .attr("y", -2)
       .text("Watts/h");
-
     this.context.append("path")
       .data([arrdata])
       .attr("d", area2);
@@ -117,7 +120,6 @@ elation.component.add('smartmeter.graph', function() {
       .selectAll("rect")
         .attr("y", -6)
         .attr("height", height2 + 7);
-
   }
   this.onbrush = function() {
     this.x.domain(this.brush.empty() ? this.x2.domain() : this.brush.extent());
