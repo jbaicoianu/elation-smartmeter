@@ -1,0 +1,27 @@
+.chart rect {
+  stroke: white;
+  fill: steelblue;
+}
+.x.label {
+  font-weight: bold;
+}
+svg {
+  font: 10px sans-serif;
+}
+
+path {
+  fill: #3B5998;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.brush .extent {
+  stroke: #fff;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
+
