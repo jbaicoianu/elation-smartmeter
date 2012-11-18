@@ -122,8 +122,13 @@ elation.component.add('smartmeter.graph', function() {
         .attr("height", height2 + 7);
   }
   this.onbrush = function() {
-    this.x.domain(this.brush.empty() ? this.x2.domain() : this.brush.extent());
-    this.focus.select("path").attr("d", this.area);
-    this.focus.select(".x.axis").call(this.xAxis);
+    if (!this.brushtimer) {
+      this.brushtimer = setTimeout(elation.bind(this, function() {
+        this.x.domain(this.brush.empty() ? this.x2.domain() : this.brush.extent());
+        this.focus.select("path").attr("d", this.area);
+        this.focus.select(".x.axis").call(this.xAxis);
+        this.brushtimer = false;
+      }), 1000/60);
+    }
   }
 });
