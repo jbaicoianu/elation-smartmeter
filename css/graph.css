@@ -4,6 +4,10 @@
 }
 .x.label {
   font-weight: bold;
+  font-size: 1.8em;
+}
+.y.label {
+  font-weight: bold;
 }
 svg {
   font: 10px sans-serif;
@@ -23,5 +27,12 @@ path {
   stroke: #fff;
   fill-opacity: .125;
   shape-rendering: crispEdges;
+  z-index: 100;
 }
 
+.electric {
+  fill: rgba(59,89,152,1);
+}
+.gas {
+  fill: rgba(0,255,0,.5);
+}
