@@ -7,7 +7,7 @@ class Component_smartmeter extends Component {
 
   public function controller_smartmeter($args) {
     $vars = array();
-    $vars["graphtype"] = any($args["graphtype"], "usagebyhour");
+    $vars["graphtype"] = any($args["graphtype"], "usageperhour");
     $vars["intervals"] = array(
       "electric" => $this->getintervals("components/smartmeter/data/electric.xml"),
       "gas" => $this->getintervals("components/smartmeter/data/gas.xml"),

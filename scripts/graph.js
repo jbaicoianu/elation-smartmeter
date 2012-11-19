@@ -10,7 +10,7 @@ elation.component.add('smartmeter.graph', function() {
     var data = [];
     this.areas = {};
     var maxval = 0;
-    this.graphtype = this.args.graphtype || 'costperhour';
+    this.graphtype = (this.args.graphtype && this.args.graphtype != "" ? this.args.graphtype : 'costperhour');
     this.initgraph();
     this.add("electric", this.args.intervals.electric, this.graphtype);
     this.add("gas", this.args.intervals.gas, this.graphtype);
