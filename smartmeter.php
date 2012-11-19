@@ -7,6 +7,7 @@ class Component_smartmeter extends Component {
 
   public function controller_smartmeter($args) {
     $vars = array();
+    $vars["graphtype"] = any($args["graphtype"], "usagebyhour");
     $vars["intervals"] = array(
       "electric" => $this->getintervals("components/smartmeter/data/electric.xml"),
       "gas" => $this->getintervals("components/smartmeter/data/gas.xml"),
@@ -49,6 +50,10 @@ class Component_smartmeter extends Component {
           $obj["costperminute"] = $obj["costpersecond"] * 60;
           $obj["costperhour"] = $obj["costperminute"] * 60;
           $obj["costperday"] = $obj["costperhour"] * 24;
+          $obj["usagepersecond"] = $obj["value"] / $obj["duration"];
+          $obj["usageperminute"] = $obj["usagepersecond"] * 60;
+          $obj["usageperhour"] = $obj["usageperminute"] * 60;
+          $obj["usageperday"] = $obj["usageperhour"] * 24;
           array_push($intervals, $obj);
         }
       }

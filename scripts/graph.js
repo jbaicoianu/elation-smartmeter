@@ -1,4 +1,8 @@
 elation.component.add('smartmeter.graph', function() {
+  this.labels = {
+    'costperhour': '$/hr',
+    'usageperhour': 'units/hr'
+  };
   this.init = function() {
     //console.log(this.args);
     
@@ -6,9 +10,14 @@ elation.component.add('smartmeter.graph', function() {
     var data = [];
     this.areas = {};
     var maxval = 0;
+    this.graphtype = this.args.graphtype || 'costperhour';
     this.initgraph();
-    this.add("electric", this.args.intervals.electric, 'costperhour');
-    this.add("gas", this.args.intervals.gas, 'costperhour');
+    this.add("electric", this.args.intervals.electric, this.graphtype);
+    this.add("gas", this.args.intervals.gas, this.graphtype);
+
+    var typeselect = elation.ui.select(null, elation.html.create({tag: 'select', append: this.container}));
+    typeselect.setItems(['costperhour', 'usageperhour'], this.graphtype);
+    elation.events.add(typeselect, "ui_select_change", function(ev) { document.location = "/smartmeter?graphtype=" + ev.target.value; });
   }
 
   this.initgraph = function() {
@@ -79,34 +88,14 @@ elation.component.add('smartmeter.graph', function() {
       .attr("text-anchor", "end")
       .attr("x", 0)
       .attr("y", -2)
-      .text("$/h");
-/*
-    this.focus.append("g")
-      .attr("class", "y2 axis")
-      .attr("transform", "translate(" + this.width + ",0)")
-      .call(this.yAxis2);
-    this.focus.append("text")
-      .attr("class", "y2 label")
-      .attr("text-anchor", "end")
-      .attr("x", this.width)
-      .attr("y", -2)
-      .text("Therms/h");
-*/
+      .text(this.labels[this.graphtype]);
   }
   this.initscales = function() {
-/*
-    var x = d3.time.scale().range([0, this.width]),
-        x2 = d3.time.scale().range([0, this.width]),
-        y = d3.scale.linear().range([this.height, 0]),
-        y2 = d3.scale.linear().range([this.height2, 0]);
-*/
   }
   
   this.add = function(name, data, field) {
     // FIXME - somehow data is coming through as an object instead of an array, which d3 requires
-    //         so we convert it, but also use this opportunity to find the max value for this dataset
     var arrdata = []; 
-    var maxval = 0;
     if (typeof field == 'undefined') field = 'cost';
 
     var timerange = [0, 0];
@@ -116,10 +105,6 @@ elation.component.add('smartmeter.graph', function() {
 
       if (data[k].start < timerange[0]) timerange[0] = data[k].start;
       if (data[k].end > timerange[1]) timerange[1] = data[k].end;
-      
-      if (data[k][field] > maxval) {
-        maxval = data[k][field];
-      }
     }
     var x = this.x, y = this.y, x2 = this.x2, y2 = this.y2, y3 = this.yy;
     
@@ -132,7 +117,6 @@ elation.component.add('smartmeter.graph', function() {
     var maxval = d3.max(arrdata.map(function(d) { return d[field]; }));
     var minval = d3.min(arrdata.map(function(d) { return d[field]; }));
     var ydomain = y.domain();
-console.log(ydomain, [minval, maxval]);
     y.domain([Math.min(ydomain[0], minval), Math.max((ydomain[1] == 1 ? 0 : ydomain[1]), maxval)]);
     y2.domain(y.domain());
 
