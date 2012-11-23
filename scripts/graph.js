@@ -54,9 +54,11 @@ elation.component.add('smartmeter.graph', function() {
         .attr("height", this.height);
 
     this.focus = svg.append("g")
+        .attr("class", "focus")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     this.context = svg.append("g")
+        .attr("class", "context")
         .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
     this.xlabel = this.focus.append("text")

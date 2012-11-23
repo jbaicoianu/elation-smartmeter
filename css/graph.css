@@ -15,7 +15,6 @@ svg {
 
 path {
   fill: #3B5998;
-  stroke: rgba(0,0,0,.5);
 }
 
 .axis path, .axis line {
@@ -36,6 +35,20 @@ path {
 }
 .gas {
   fill: rgba(0,255,0,.5);
+}
+/*
+.focus.dragging path {
+  stroke: none !important;
+}
+.focus path.electric {
+  stroke: rgba(0,0,64,1);
+}
+.focus path.gas {
+  stroke: rgba(0,64,0,1);
+}
+*/
+.daytick {
+  pointer-events: none;
 }
 .total {
   font-size: 1.5em;
