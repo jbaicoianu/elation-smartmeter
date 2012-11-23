@@ -15,6 +15,7 @@ svg {
 
 path {
   fill: #3B5998;
+  stroke: rgba(0,0,0,.5);
 }
 
 .axis path, .axis line {
@@ -35,4 +36,8 @@ path {
 }
 .gas {
   fill: rgba(0,255,0,.5);
+}
+.total {
+  font-size: 1.5em;
+  font-weight: bold;
 }
