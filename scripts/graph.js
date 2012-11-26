@@ -17,14 +17,21 @@ elation.component.add('smartmeter.graph', function() {
     this.ydomain = [0, 0];
     this.graphtype = (this.args.graphtype && this.args.graphtype != "" ? this.args.graphtype : 'costperhour');
     this.initgraph();
-    this.add("electric", this.processdata("electric", this.args.intervals.electric), this.graphtype);
-    this.add("gas", this.processdata("gas", this.args.intervals.gas), this.graphtype);
-    this.setrange([new Date(this.xdomain[1] - 7 * 24 * 60 * 60 * 1000), new Date(this.xdomain[1])]);
+    this.setrange([new Date(new Date() - 7 * 24 * 60 * 60 * 1000), new Date()]);
+    if (!elation.utils.isEmpty(this.args.intervals)) {
+      for (var k in this.args.intervals) {
+        this.add(k, this.processdata(k, this.args.intervals[k]), this.graphtype);
+      }
+      this.setrange([new Date(this.xdomain[1] - 7 * 24 * 60 * 60 * 1000), new Date(this.xdomain[1])]);
+    }
     this.updatebrush();
+    this.initdroptarget();
 
     var typeselect = elation.ui.select(null, elation.html.create({tag: 'select', append: this.container}));
-    typeselect.setItems(['costperhour', 'usageperhour'], this.graphtype);
+    typeselect.setItems(['costperhour', 'usageperhour', 'usageperday'], this.graphtype);
     elation.events.add(typeselect, "ui_select_change", this);
+
+    elation.events.add(this, "ui_droptarget_drop", this);
   }
 
   this.initgraph = function() {
@@ -46,7 +53,7 @@ elation.component.add('smartmeter.graph', function() {
         yAxis = d3.svg.axis().scale(y).orient("left");
         //yAxis2 = d3.svg.axis().scale(y).orient("right");
     
-    var svg = d3.select("body").append("svg")
+    var svg = d3.select(this.container).append("svg")
         .attr("width", this.width + margin.left + margin.right)
         .attr("height", this.height + margin.top + margin.bottom);
 
@@ -160,8 +167,8 @@ elation.component.add('smartmeter.graph', function() {
       foo = this.focus.append("path")
         .attr("class", name)
         .attr("clip-path", "url(#clip)")
-        .data([data])
     }
+    foo.data([data])
 
     this.context.selectAll("path." + name).remove();
     this.context.append("path")
@@ -169,6 +176,13 @@ elation.component.add('smartmeter.graph', function() {
       .data([data])
       .attr("d", area2);
 
+    /*
+    var nest = d3.nest()
+        .key(function(d) { return d.time.getFullYear(); })
+        .key(function(d) { return d.time.getMonth(); })
+        .key(function(d) { return d.time.getDate(); })
+        .entries(data);
+    */
     this.updatebrush();
   }
   this.setscale = function(scale) {
@@ -237,8 +251,8 @@ elation.component.add('smartmeter.graph', function() {
     this.context.select(".x.axis").call(this.xAxis2);
   }
   this.update = function(name, animate) {
-    if (animate) {
-      this.focus.select("path." + name).transition().duration(500).ease('cubic-out').attr("d", this.areas[name]);
+    if (animate && false) {
+      this.focus.select("path." + name).transition().duration(000).ease('cubic-out').attr("d", this.areas[name]);
     } else {
       this.focus.select("path." + name).attr("d", this.areas[name]);
     }
@@ -253,7 +267,6 @@ elation.component.add('smartmeter.graph', function() {
       this.context.select(".x.brush").remove();
     }
     this.brush.extent(x.domain());
-console.log(this.brush.extent(), x.domain());
 
     this.context.append("g")
         .attr("class", "x brush")
@@ -267,6 +280,49 @@ console.log(this.brush.extent(), x.domain());
       var rangedata = this.data[name].filter(function(d) { return (d.time >= range[0] && d.time <= range[1]); });
       return {name: name, total: d3.sum(rangedata, elation.bind(this, function(d) { return (this.graphtype == 'costperhour' ? d.cost : d.value / 1000); }))};
     }
+  }
+  this.clear = function() {
+    for (var name in this.data) {
+      this.focus.selectAll("path." + name).remove();
+      this.context.selectAll("path." + name + "_summary").remove();
+    }
+    this.focus.selectAll(".total").remove();
+    this.data = {};
+  }
+  this.loadzip = function(data) {
+    var zip = new JSZip(data);
+    this.clear();
+    var re = new RegExp("^pge_(.*?)_interval_data");
+    for (var k in zip.files) {
+      var m = re.exec(k);
+      var xmldata = elation.utils.parseXML(zip.files[k].data);
+      var foo = elation.utils.arrayget(xmldata, "feed._children.entry.3._children.content._children.IntervalBlock._children.IntervalReading");
+      var intervals = [];
+      for (var i = 0; i < foo.length; i++) {
+        var interval = {
+          "start": +elation.utils.arrayget(foo[i], "_children.timePeriod._children.start._content"),
+          "duration": +elation.utils.arrayget(foo[i], "_children.timePeriod._children.duration._content"),
+          "value": +elation.utils.arrayget(foo[i], "_children.value._content"),
+          "cost": +elation.utils.arrayget(foo[i], "_children.cost._content") / 100000
+        };
+        interval["end"] = interval["start"] + interval["duration"];
+        interval["costpersecond"] = interval["cost"] / interval["duration"];
+        interval["costperminute"] = interval["costpersecond"] * 60;
+        interval["costperhour"] = interval["costperminute"] * 60;
+        interval["costperday"] = interval["costperhour"] * 24;
+        interval["time"] = new Date(interval["start"] * 1000);
+        interval["usagepersecond"] = interval["value"] / interval["duration"];
+        interval["usageperminute"] = interval["usagepersecond"] * 60;
+        interval["usageperhour"] = interval["usageperminute"] * 60;
+        interval["usageperday"] = interval["usageperhour"] * 24;
+        intervals.push(interval);
+      }
+      this.data[m[1]] = intervals;
+      this.add(m[1], intervals, this.graphtype);
+    }
+    this.setrange();
+    this.setscale();
+    //this.updatebrush();
   }
   this.onbrush = function() {
     if (!this.brushtimer) {
@@ -287,5 +343,21 @@ console.log(this.brush.extent(), x.domain());
     }
     this.setrange(range, true);
     //document.location = "/smartmeter?graphtype=" + ev.target.value; 
-  };
-});
+  }
+  this.ui_droptarget_drop = function(ev) {
+    console.log('doop', ev);
+    if (ev.data.files && ev.data.files.length > 0) {
+      for (var i = 0; i < ev.data.files.length; i++) {
+        var file = ev.data.files[i];
+        if (file.type == 'application/zip') {
+          var freader = new FileReader();
+          elation.events.add(freader, "load", elation.bind(this, function(ev) {
+            this.loadzip(ev.currentTarget.result);
+          }));
+          freader.readAsBinaryString(file);
+        }
+      }
+    }
+    
+  }
+}, elation.ui.droptarget);

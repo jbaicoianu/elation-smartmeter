@@ -1,3 +1,5 @@
+{dependency name="html.jszip"}
+{dependency name="ui.droptarget"}
 {dependency name="ui.select"}
 {dependency name="smartmeter.d3"}
 {dependency name="smartmeter.graph"}
