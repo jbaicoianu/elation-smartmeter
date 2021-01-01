@@ -4,7 +4,8 @@
 {dependency name="smartmeter.d3"}
 {dependency name="smartmeter.graph"}
 
-<div elation:component="smartmeter.graph" elation:args.graphtype="{$graphtype}">
-  <elation:args name="intervals">{jsonencode var=$intervals}</elation:args>
+<div data-elation-component="smartmeter.graph" data-elation-args.graphtype="{$graphtype}">
+  <data class="elation-args" name="graphtype">{$graphtype}</data>
+  <data class="elation-args" name="intervals">{jsonencode var=$intervals}</data>
 </div>
 {set var="page.title"}Smartmeter electricity usage graphs{/set}
